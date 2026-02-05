@@ -134,7 +134,7 @@ class CapitalOneParser:
         amount = None
 
         #Extract merchant name
-        merchant_match = re.search(r'at (.+?), a pending', clean_body)
+        merchant_match = re.search(r', at (.+?), a pending', clean_body)
         if merchant_match:
             merchant_name = merchant_match.group(1).strip()
 
