@@ -74,6 +74,6 @@ if len(email_ids) > 0:
     else: 
         print("\n Parser cannot handle this email")
 else:
-    print("No chase emails found. Check mailbox again.")
+    print("No Chase emails found. Check mailbox again.")
 
 mail.logout()
