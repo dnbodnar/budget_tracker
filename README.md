@@ -12,7 +12,6 @@ An automated personal finance tracking system that extracts credit card transact
 **Pipeline:**
 ```
 Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
-           (865 emails)   (91% accuracy)    (Silver Layer)   (Gold Layer)
 ```
 
 ## Features
