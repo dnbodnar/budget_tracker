@@ -1,7 +1,9 @@
 import imaplib
-import email 
+import email
 import os
-from dotenv import load_dotenv 
+import sys
+from dotenv import load_dotenv
+sys.path.insert(0, 'src/extract')
 from email_parser import ChaseParser
 
 load_dotenv()

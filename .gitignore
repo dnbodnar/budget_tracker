@@ -1,9 +1,10 @@
 venv/
 __pycache__/
-*.pyc 
+*.pyc
 .env
 data/
 *.log
 .DS_Store
 models/
 *.pkl
+CLAUDE.md

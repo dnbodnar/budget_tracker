@@ -12,7 +12,7 @@ An automated personal finance tracking system that extracts credit card transact
 **Pipeline:**
 ```
 Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL Load → Gold Views
-           (865 emails)   (91% accuracy)    (Silver Layer)    (865 records)   (6 analytics views)
+                           (91% accuracy)    (Silver Layer)                    (6 analytics views)
 ```
 
 ## Features
@@ -22,7 +22,7 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
 - **PostgreSQL Data Warehouse:** Structured silver layer with indexed columns for fast queries
 - **Gold Layer Analytics:** 6 pre-aggregated views for instant insights (monthly trends, top merchants, category breakdowns)
-- **Data Quality Validation:** 0% null values across 865+ transactions
+- **Data Quality Validation:** Null checks across all required fields before load
 - **Feature Engineering:** Amount bucketing, card encoding, temporal features
 
 ## Tech Stack
@@ -38,16 +38,22 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 ## Project Structure
 ```
 budget_tracker/
-├── data/
-│   ├── bronze/          # Raw transaction JSONs (865 files)
-│   └── silver/          # Cleaned Parquet files
-├── models/              # Trained ML models (.pkl files)
+├── data/                    # gitignored
+│   ├── bronze/              # Raw transaction JSONs
+│   └── silver/              # Cleaned Parquet files
+├── models/                  # Trained ML models (gitignored)
+├── notebooks/               # Exploratory analysis
+├── sql/                     # Standalone SQL scripts
+│   ├── 01_create_tables.sql
+│   └── 02_seed_categories.sql
 ├── src/
-│   ├── extract/         # Gmail API extraction
-│   ├── transform/       # Silver layer transformation pipeline
-│   └── load/            # PostgreSQL load scripts and gold views
-├── credentials/         # Gmail API credentials (gitignored)
-└── docker-compose.yml   # PostgreSQL + PgAdmin containers
+│   ├── extract/             # Gmail API extraction and parsers
+│   ├── transform/           # ML categorization pipeline
+│   └── load/                # PostgreSQL schema, loader, and gold views
+├── tests/                   # Test scripts
+├── config/                  # Configuration files
+├── requirements.txt
+└── docker-compose.yml       # PostgreSQL + PgAdmin containers
 ```
 
 ## Setup

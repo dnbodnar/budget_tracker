@@ -1,8 +1,10 @@
 import imaplib
-import email 
+import email
 import os
-from dotenv import load_dotenv 
-from email_parser import CapitalOneParser
+import sys
+from dotenv import load_dotenv
+sys.path.insert(0, 'src/extract')
+from email_parser import DiscoverParser
 
 load_dotenv()
 
@@ -16,11 +18,11 @@ mail = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
 mail.login(EMAIL, PASSWORD)
 mail.select('inbox')
 
-print("Searching for CapitalOne Email Transactions....")
-status, messages = mail.search(None, 'FROM "capitalone@notification.capitalone.com"')
+print("Searching for Discover Email Transactions....")
+status, messages = mail.search(None, 'FROM "discover@services.discover.com"')
 email_ids = messages[0].split()
 
-print(f"Found {len(email_ids)} CapitalOne emails")
+print(f"Found {len(email_ids)} Discover emails")
 
 if len(email_ids) > 0:
     #Fetch the most recent email only 
@@ -60,7 +62,7 @@ if len(email_ids) > 0:
 
     email_body = email_body_html if email_body_html else email_body_text
 
-    parser = CapitalOneParser()
+    parser = DiscoverParser()
 
     if parser.can_parse(email_from, email_subject):
         print("\n Parser can handle this email")
@@ -74,6 +76,6 @@ if len(email_ids) > 0:
     else: 
         print("\n Parser cannot handle this email")
 else:
-    print("No CapitalOne emails found. Check mailbox again.")
+    print("No discover emails found. Check mailbox again.")
 
 mail.logout()
