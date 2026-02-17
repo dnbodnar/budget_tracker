@@ -7,11 +7,12 @@ An automated personal finance tracking system that extracts credit card transact
 **Medallion Data Lake Pattern:**
 - **Bronze Layer:** Raw transaction emails extracted from Gmail API (JSON)
 - **Silver Layer:** Cleaned, ML-categorized transactions (Parquet)
-- **Gold Layer:** Aggregated analytics ready for PostgreSQL *(coming soon)*
+- **Gold Layer:** Pre-aggregated analytics views in PostgreSQL
 
 **Pipeline:**
 ```
-Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
+Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL Load → Gold Views
+           (865 emails)   (91% accuracy)    (Silver Layer)    (865 records)   (6 analytics views)
 ```
 
 ## Features
@@ -19,6 +20,8 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 - **Automated Email Extraction:** Gmail API integration for Chase, Discover, and CapitalOne transactions
 - **Machine Learning Categorization:** Logistic Regression model with TF-IDF vectorization (91% accuracy)
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
+- **PostgreSQL Data Warehouse:** Structured silver layer with indexed columns for fast queries
+- **Gold Layer Analytics:** 6 pre-aggregated views for instant insights (monthly trends, top merchants, category breakdowns)
 - **Data Quality Validation:** 0% null values across 865+ transactions
 - **Feature Engineering:** Amount bucketing, card encoding, temporal features
 
@@ -37,15 +40,14 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 budget_tracker/
 ├── data/
 │   ├── bronze/          # Raw transaction JSONs (865 files)
-│   ├── silver/          # Cleaned Parquet files
-│   └── gold/            # Aggregated analytics (coming soon)
+│   └── silver/          # Cleaned Parquet files
 ├── models/              # Trained ML models (.pkl files)
 ├── src/
 │   ├── extract/         # Gmail API extraction
-│   ├── ml/              # Model training scripts
-│   └── transform/       # ETL transformation pipeline
+│   ├── transform/       # Silver layer transformation pipeline
+│   └── load/            # PostgreSQL load scripts and gold views
 ├── credentials/         # Gmail API credentials (gitignored)
-└── docker-compose.yml   # PostgreSQL container
+└── docker-compose.yml   # PostgreSQL + PgAdmin containers
 ```
 
 ## Setup
@@ -79,14 +81,17 @@ docker compose up -d
 
 ### 5. Run Pipeline
 ```bash
-# Extract transactions from Gmail
-python src/extract/extract_emails.py
+# Step 1: Extract transactions from Gmail
+python src/extract/extract_transactions.py
 
-# Train ML categorization model
-python src/ml/train_model.py
+# Step 2: Train ML categorization model
+python src/transform/train_categorizer.py
 
-# Transform and categorize transactions
+# Step 3: Transform and categorize transactions
 python src/transform/transform_transactions.py
+
+# Step 4: Load to PostgreSQL and create gold views
+python src/load/load_to_postgres.py
 ```
 
 ## Machine Learning Model
@@ -97,17 +102,35 @@ python src/transform/transform_transactions.py
 - Card type (Chase, Discover, CapitalOne)
 - Day of month
 
-**Model:** Logistic Regression (max_iter=1000)  
-**Training Data:** 330 manually labeled transactions  
-**Accuracy:** 91%  
+**Model:** Logistic Regression (max_iter=1000)
+**Training Data:** 330 manually labeled transactions
+**Accuracy:** 91%
+
+## Gold Layer Analytics Views
+
+The PostgreSQL gold layer provides 6 pre-aggregated views for instant analytics:
+
+1. **`gold.category_summary`** - Overall spending by category with percentages
+2. **`gold.monthly_totals`** - Month-over-month spending trends
+3. **`gold.monthly_spending_by_category`** - Detailed monthly breakdown per category
+4. **`gold.top_merchants`** - Top merchants by total spending
+5. **`gold.card_usage_stats`** - Credit card usage statistics
+6. **`gold.daily_spending`** - Daily spending patterns
+
+**Access via PgAdmin:**
+- URL: http://localhost:5050
+- Email: `admin@admin.com`
+- Password: `admin`
+- Server: `budget_postgres` (host), port 5432
 
 ## Next Steps
 
-- [ ] Gold layer aggregations (monthly summaries, category totals)
-- [ ] PostgreSQL schema design and data loading
-- [ ] Apache Airflow orchestration
-- [ ] Dashboard with analytics queries
+- [x] Gold layer aggregations (monthly summaries, category totals)
+- [x] PostgreSQL schema design and data loading
+- [ ] Apache Airflow orchestration for scheduled runs
+- [ ] Interactive dashboard (Streamlit or Plotly Dash)
 - [ ] Budget alerts and spending insights
+- [ ] Automated email reports
 
 ## License
 
