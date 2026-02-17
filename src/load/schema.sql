@@ -1,9 +1,3 @@
--- ============================================================
--- BUDGET TRACKER - DATABASE SCHEMA
--- ============================================================
--- Silver Layer: Cleaned, categorized transactions from Parquet
--- ============================================================
-
 -- Create silver schema for transformed data
 CREATE SCHEMA IF NOT EXISTS silver;
 
@@ -27,6 +21,3 @@ CREATE INDEX idx_category ON silver.transactions(category);
 CREATE INDEX idx_card_name ON silver.transactions(card_name);
 CREATE INDEX idx_merchant_name ON silver.transactions(merchant_name);
 
--- ============================================================
--- SCHEMA CREATED SUCCESSFULLY
--- ============================================================
