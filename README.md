@@ -22,6 +22,7 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
 - **PostgreSQL Data Warehouse:** Structured silver layer with indexed columns for fast queries
 - **Gold Layer Analytics:** 6 pre-aggregated views for instant insights (monthly trends, top merchants, category breakdowns)
+- **Interactive Dashboard:** Streamlit app with year/month filtering, category breakdowns, spending trends, top merchants, and card usage
 - **Data Quality Validation:** Null checks across all required fields before load
 - **Feature Engineering:** Amount bucketing, card encoding, temporal features
 
@@ -34,6 +35,8 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 - **Docker** - Database containerization
 - **Gmail API** - Transaction extraction
 - **Parquet** - Columnar storage format
+- **Streamlit** - Interactive dashboard
+- **Plotly** - Interactive charts
 
 ## Project Structure
 ```
@@ -49,7 +52,9 @@ budget_tracker/
 ├── src/
 │   ├── extract/             # Gmail API extraction and parsers
 │   ├── transform/           # ML categorization pipeline
-│   └── load/                # PostgreSQL schema, loader, and gold views
+│   ├── load/                # PostgreSQL schema, loader, and gold views
+│   └── dashboard/           # Streamlit dashboard
+├── .streamlit/              # Streamlit configuration
 ├── tests/                   # Test scripts
 ├── config/                  # Configuration files
 ├── requirements.txt
@@ -98,6 +103,9 @@ python src/transform/transform_transactions.py
 
 # Step 4: Load to PostgreSQL and create gold views
 python src/load/load_to_postgres.py
+
+# Step 5: Launch the dashboard
+streamlit run src/dashboard/app.py
 ```
 
 ## Machine Learning Model
@@ -133,8 +141,9 @@ The PostgreSQL gold layer provides 6 pre-aggregated views for instant analytics:
 
 - [x] Gold layer aggregations (monthly summaries, category totals)
 - [x] PostgreSQL schema design and data loading
+- [x] Interactive dashboard (Streamlit) with year/month filtering
+- [ ] Dashboard polish and additional views
 - [ ] Apache Airflow orchestration for scheduled runs
-- [ ] Interactive dashboard (Streamlit or Plotly Dash)
 - [ ] Budget alerts and spending insights
 - [ ] Automated email reports
 
