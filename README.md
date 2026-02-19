@@ -22,7 +22,7 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
 - **PostgreSQL Data Warehouse:** Structured silver layer with indexed columns for fast queries
 - **Gold Layer Analytics:** 6 pre-aggregated views for instant insights (monthly trends, top merchants, category breakdowns)
-- **Interactive Dashboard:** Streamlit app with year/month filtering, category breakdowns, spending trends, top merchants, and card usage
+- **Interactive Dashboard:** Streamlit app with a current month snapshot (MTD spend, MoM/YoY deltas, cumulative daily chart) and a historical deep dive (category, monthly trends, top merchants, card usage)
 - **Data Quality Validation:** Null checks across all required fields before load
 - **Feature Engineering:** Amount bucketing, card encoding, temporal features
 
@@ -141,7 +141,7 @@ The PostgreSQL gold layer provides 6 pre-aggregated views for instant analytics:
 
 - [x] Gold layer aggregations (monthly summaries, category totals)
 - [x] PostgreSQL schema design and data loading
-- [x] Interactive dashboard (Streamlit) with year/month filtering
+- [x] Interactive dashboard (Streamlit) — current month snapshot and historical deep dive
 - [ ] Dashboard polish and additional views
 - [ ] Apache Airflow orchestration for scheduled runs
 - [ ] Budget alerts and spending insights
