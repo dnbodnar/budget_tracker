@@ -1,42 +1,48 @@
 # Budget Tracker ETL Pipeline
 
-An automated personal finance tracking system that extracts credit card transactions from Gmail, categorizes them using machine learning, and stores analytics-ready data.
+An automated personal finance tracking system that extracts credit card transactions from Gmail, categorizes them using machine learning, and serves a live dashboard.
 
 ## Architecture
 
 **Medallion Data Lake Pattern:**
 - **Bronze Layer:** Raw transaction emails extracted from Gmail API (JSON)
 - **Silver Layer:** Cleaned, ML-categorized transactions (Parquet)
-- **Gold Layer:** Pre-aggregated analytics views in PostgreSQL
+- **Gold Layer:** Pre-aggregated analytics views in PostgreSQL (Supabase)
 
 **Pipeline:**
 ```
-Gmail API → Email Parser → ML Categorizer → Parquet Storage → PostgreSQL Load → Gold Views
-                           (91% accuracy)    (Silver Layer)                    (6 analytics views)
+Gmail API → Email Parser → ML Categorizer → Parquet Storage → Supabase PostgreSQL → Gold Views → Streamlit Dashboard
+                           (91% accuracy)    (Silver Layer)    (hosted cloud DB)                  (live at drewbudget.duckdns.org)
 ```
+
+**Infrastructure:**
+- **Supabase** — hosted PostgreSQL database (cloud)
+- **Oracle Cloud VM** — always-on Ubuntu server hosting the Streamlit dashboard
+- **nginx + Let's Encrypt** — reverse proxy with SSL termination
+- **DuckDNS** — free DNS for `drewbudget.duckdns.org`
 
 ## Features
 
 - **Automated Email Extraction:** Gmail API integration for Chase, Discover, and CapitalOne transactions
 - **Machine Learning Categorization:** Logistic Regression model with TF-IDF vectorization (91% accuracy)
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
-- **PostgreSQL Data Warehouse:** Structured silver layer with indexed columns for fast queries
+- **Supabase PostgreSQL:** Cloud-hosted data warehouse with indexed columns for fast queries
 - **Gold Layer Analytics:** 6 pre-aggregated views for instant insights (monthly trends, top merchants, category breakdowns)
-- **Interactive Dashboard:** Streamlit app with a current month snapshot (MTD spend, MoM/YoY deltas, cumulative daily chart) and a historical deep dive (category, monthly trends, top merchants, card usage)
+- **Live Dashboard:** Password-protected Streamlit app at `https://drewbudget.duckdns.org` with a current month snapshot (MTD spend, MoM/YoY deltas, cumulative daily chart) and a historical deep dive (category, monthly trends, top merchants, card usage)
 - **Data Quality Validation:** Null checks across all required fields before load
-- **Feature Engineering:** Amount bucketing, card encoding, temporal features
 
 ## Tech Stack
 
 - **Python 3.12.10**
 - **Pandas** - Data transformation
 - **scikit-learn** - ML categorization model
-- **PostgreSQL** - Analytics database
-- **Docker** - Database containerization
+- **PostgreSQL / Supabase** - Cloud analytics database
 - **Gmail API** - Transaction extraction
 - **Parquet** - Columnar storage format
 - **Streamlit** - Interactive dashboard
 - **Plotly** - Interactive charts
+- **nginx** - Reverse proxy and SSL termination
+- **Oracle Cloud** - VM hosting (Always Free tier)
 
 ## Project Structure
 ```
@@ -47,8 +53,6 @@ budget_tracker/
 ├── models/                  # Trained ML models (gitignored)
 ├── notebooks/               # Exploratory analysis
 ├── sql/                     # Standalone SQL scripts
-│   ├── 01_create_tables.sql
-│   └── 02_seed_categories.sql
 ├── src/
 │   ├── extract/             # Gmail API extraction and parsers
 │   ├── transform/           # ML categorization pipeline
@@ -56,20 +60,15 @@ budget_tracker/
 │   └── dashboard/           # Streamlit dashboard
 ├── .streamlit/              # Streamlit configuration
 ├── tests/                   # Test scripts
-├── config/                  # Configuration files
 ├── requirements.txt
-└── docker-compose.yml       # PostgreSQL + PgAdmin containers
+└── docker-compose.yml       # Local PostgreSQL + PgAdmin (dev only)
 ```
 
 ## Setup
 
 ### 1. Prerequisites
 ```bash
-# Python 3.12
 python --version  # Should be 3.12.x
-
-# Docker Desktop
-docker --version
 ```
 
 ### 2. Install Dependencies
@@ -79,32 +78,38 @@ source venv/bin/activate  # Windows: .\venv\Scripts\Activate
 pip install -r requirements.txt
 ```
 
-### 3. Set Up Gmail API
+### 3. Configure Environment
+Create a `.env` file in the project root:
+```
+SUPABASE_DB_URL=postgresql://...
+EMAIL_ADDRESS=...
+EMAIL_PASSWORD=...
+IMAP_SERVER=imap.gmail.com
+IMAP_PORT=993
+DASHBOARD_PASSWORD=...
+```
+
+### 4. Set Up Gmail API
 1. Create project in [Google Cloud Console](https://console.cloud.google.com)
 2. Enable Gmail API
 3. Download OAuth credentials as `credentials.json`
 4. Place in `credentials/` directory
-
-### 4. Start PostgreSQL
-```bash
-docker compose up -d
-```
 
 ### 5. Run Pipeline
 ```bash
 # Step 1: Extract transactions from Gmail
 python src/extract/extract_transactions.py
 
-# Step 2: Train ML categorization model
+# Step 2: Train ML categorization model (first time only)
 python src/transform/train_categorizer.py
 
 # Step 3: Transform and categorize transactions
 python src/transform/transform_transactions.py
 
-# Step 4: Load to PostgreSQL and create gold views
+# Step 4: Load to PostgreSQL
 python src/load/load_to_postgres.py
 
-# Step 5: Launch the dashboard
+# Step 5: Launch the dashboard locally
 streamlit run src/dashboard/app.py
 ```
 
@@ -122,7 +127,7 @@ streamlit run src/dashboard/app.py
 
 ## Gold Layer Analytics Views
 
-The PostgreSQL gold layer provides 6 pre-aggregated views for instant analytics:
+6 pre-aggregated views in Supabase for instant analytics:
 
 1. **`gold.category_summary`** - Overall spending by category with percentages
 2. **`gold.monthly_totals`** - Month-over-month spending trends
@@ -131,21 +136,15 @@ The PostgreSQL gold layer provides 6 pre-aggregated views for instant analytics:
 5. **`gold.card_usage_stats`** - Credit card usage statistics
 6. **`gold.daily_spending`** - Daily spending patterns
 
-**Access via PgAdmin:**
-- URL: http://localhost:5050
-- Email: `admin@admin.com`
-- Password: `admin`
-- Server: `budget_postgres` (host), port 5432
-
 ## Next Steps
 
 - [x] Gold layer aggregations (monthly summaries, category totals)
 - [x] PostgreSQL schema design and data loading
-- [x] Interactive dashboard (Streamlit) — current month snapshot and historical deep dive
-- [ ] Dashboard polish and additional views
-- [ ] Apache Airflow orchestration for scheduled runs
+- [x] Interactive dashboard — current month snapshot and historical deep dive
+- [x] Cloud deployment — Supabase DB, Oracle VM, nginx, SSL, custom domain
+- [x] Password-protected live dashboard at `https://drewbudget.duckdns.org`
+- [ ] GitHub Actions for daily automated pipeline runs
 - [ ] Budget alerts and spending insights
-- [ ] Automated email reports
 
 ## License
 
