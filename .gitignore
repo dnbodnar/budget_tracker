@@ -5,8 +5,6 @@ __pycache__/
 data/
 *.log
 .DS_Store
-models/
-*.pkl
 CLAUDE.md
 *.pem
 *.key

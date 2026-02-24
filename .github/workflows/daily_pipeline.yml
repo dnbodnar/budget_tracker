@@ -1,0 +1,41 @@
+name: Daily Budget Pipeline
+
+on:
+  schedule:
+    - cron: '0 14 * * *'  # 9am EST daily
+  workflow_dispatch:       # allow manual runs
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run extract
+        env:
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          IMAP_SERVER: ${{ secrets.IMAP_SERVER }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+        run: python src/extract/extract_transactions.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Run transform
+        run: python src/transform/transform_transactions.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Run load
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: python src/load/load_to_postgres.py
+        working-directory: ${{ github.workspace }}
