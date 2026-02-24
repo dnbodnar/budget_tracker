@@ -5,6 +5,10 @@ import plotly.graph_objects as go
 from sqlalchemy import create_engine, text
 from datetime import date
 import calendar
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(
     page_title="Budget Tracker",
@@ -12,15 +16,28 @@ st.set_page_config(
     layout="wide"
 )
 
-db_host = "localhost"
-db_port = "5432"
-db_name = "budget_tracker"
-db_user = "budget_user"
-db_password = "budget_pass"
+def check_password():
+    if st.session_state.get("authenticated"):
+        return True
+    st.title("💰 Budget Tracker")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if password == os.getenv("DASHBOARD_PASSWORD", ""):
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Incorrect password")
+    return False
+
+if not check_password():
+    st.stop()
 
 @st.cache_resource
 def get_engine():
-    connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    connection_string = os.getenv(
+        "SUPABASE_DB_URL",
+        "postgresql://budget_user:budget_pass@localhost:5432/budget_tracker"
+    )
     return create_engine(connection_string)
 
 # Current month data functions

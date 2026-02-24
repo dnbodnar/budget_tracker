@@ -1,22 +1,22 @@
+import os
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine, text
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def load_to_postgres():
     print("=" * 60)
     print("BUDGET TRACKER - LOAD TO POSTGRESQL")
     print("=" * 60)
 
-    # Database connection settings
-    db_host = "localhost"
-    db_port = "5432"
-    db_name = "budget_tracker"
-    db_user = "budget_user"
-    db_password = "budget_pass"
-
     print("\n1. Connecting to PostgreSQL...")
-    connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    connection_string = os.getenv(
+        "SUPABASE_DB_URL",
+        "postgresql://budget_user:budget_pass@localhost:5432/budget_tracker"
+    )
     engine = create_engine(connection_string)
 
     try:
@@ -62,8 +62,19 @@ def load_to_postgres():
     print("\n5. Preparing database table...")
     print(f"   Target: silver.transactions")
 
-    # Truncate existing data but keep schema
     with engine.connect() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS silver;"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS silver.transactions (
+                id SERIAL PRIMARY KEY,
+                transaction_date DATE NOT NULL,
+                merchant_name VARCHAR(255) NOT NULL,
+                amount NUMERIC(10, 2) NOT NULL,
+                card_name VARCHAR(50) NOT NULL,
+                category VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
         conn.execute(text("TRUNCATE TABLE silver.transactions;"))
         conn.commit()
         print(f"   Cleared existing data")
