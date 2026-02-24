@@ -5,15 +5,13 @@ An automated personal finance tracking system that extracts credit card transact
 ## Architecture
 
 **Medallion Data Lake Pattern:**
-- **Bronze Layer:** Raw transaction emails extracted from Gmail API (JSON)
+- **Bronze Layer:** Raw transaction emails extracted via IMAP (JSON)
 - **Silver Layer:** Cleaned, ML-categorized transactions (Parquet)
 - **Gold Layer:** Pre-aggregated analytics views in PostgreSQL (Supabase)
 
 **Pipeline:**
 ```
-Gmail API → Email Parser → ML Categorizer → Parquet Storage → Supabase PostgreSQL → Gold Views → Streamlit Dashboard
-                           (91% accuracy)    (Silver Layer)    (hosted cloud DB)                  (live at drewbudget.duckdns.org)
-```
+Gmail IMAP → Email Parser → ML Categorizer → Parquet Storage → Supabase PostgreSQL → Gold Views → Streamlit Dashboard
 
 **Infrastructure:**
 - **Supabase** — hosted PostgreSQL database (cloud)
@@ -23,7 +21,7 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → Supabase P
 
 ## Features
 
-- **Automated Email Extraction:** Gmail API integration for Chase, Discover, and CapitalOne transactions
+- **Automated Email Extraction:** IMAP integration for Chase, Discover, and CapitalOne transaction emails
 - **Machine Learning Categorization:** Logistic Regression model with TF-IDF vectorization (91% accuracy)
 - **9 Spending Categories:** Dining, Shopping, Groceries, Subscriptions, Entertainment, Transportation, Bills, Travel, Other
 - **Supabase PostgreSQL:** Cloud-hosted data warehouse with indexed columns for fast queries
@@ -37,7 +35,7 @@ Gmail API → Email Parser → ML Categorizer → Parquet Storage → Supabase P
 - **Pandas** - Data transformation
 - **scikit-learn** - ML categorization model
 - **PostgreSQL / Supabase** - Cloud analytics database
-- **Gmail API** - Transaction extraction
+- **IMAP / imaplib** - Gmail transaction email extraction
 - **Parquet** - Columnar storage format
 - **Streamlit** - Interactive dashboard
 - **Plotly** - Interactive charts
@@ -50,11 +48,11 @@ budget_tracker/
 ├── data/                    # gitignored
 │   ├── bronze/              # Raw transaction JSONs
 │   └── silver/              # Cleaned Parquet files
-├── models/                  # Trained ML models (gitignored)
+├── models/                  # Trained ML models
 ├── notebooks/               # Exploratory analysis
 ├── sql/                     # Standalone SQL scripts
 ├── src/
-│   ├── extract/             # Gmail API extraction and parsers
+│   ├── extract/             # IMAP extraction and email parsers
 │   ├── transform/           # ML categorization pipeline
 │   ├── load/                # PostgreSQL schema, loader, and gold views
 │   └── dashboard/           # Streamlit dashboard
@@ -79,23 +77,18 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configure Environment
-Create a `.env` file in the project root:
+Create a `.env` file in the project root (never commit this):
 ```
 SUPABASE_DB_URL=postgresql://...
-EMAIL_ADDRESS=...
-EMAIL_PASSWORD=...
+EMAIL_ADDRESS=your.gmail@gmail.com
+EMAIL_PASSWORD=xxxx xxxx xxxx xxxx  # Gmail app password
 IMAP_SERVER=imap.gmail.com
 IMAP_PORT=993
 DASHBOARD_PASSWORD=...
 ```
+The `EMAIL_PASSWORD` is a Gmail app password (not your account password). Generate one at myaccount.google.com → Security → App Passwords.
 
-### 4. Set Up Gmail API
-1. Create project in [Google Cloud Console](https://console.cloud.google.com)
-2. Enable Gmail API
-3. Download OAuth credentials as `credentials.json`
-4. Place in `credentials/` directory
-
-### 5. Run Pipeline
+### 4. Run Pipeline
 ```bash
 # Step 1: Extract transactions from Gmail
 python src/extract/extract_transactions.py
@@ -135,16 +128,6 @@ streamlit run src/dashboard/app.py
 4. **`gold.top_merchants`** - Top merchants by total spending
 5. **`gold.card_usage_stats`** - Credit card usage statistics
 6. **`gold.daily_spending`** - Daily spending patterns
-
-## Next Steps
-
-- [x] Gold layer aggregations (monthly summaries, category totals)
-- [x] PostgreSQL schema design and data loading
-- [x] Interactive dashboard — current month snapshot and historical deep dive
-- [x] Cloud deployment — Supabase DB, Oracle VM, nginx, SSL, custom domain
-- [x] Password-protected live dashboard at `https://drewbudget.duckdns.org`
-- [ ] GitHub Actions for daily automated pipeline runs
-- [ ] Budget alerts and spending insights
 
 ## License
 
