@@ -75,29 +75,49 @@ def load_to_postgres():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
-        conn.execute(text("TRUNCATE TABLE silver.transactions;"))
         conn.commit()
-        print(f"   Cleared existing data")
 
-    print("\n6. Loading data to PostgreSQL...")
+    print("\n6. Deduplicating against existing records...")
+    existing = pd.read_sql("""
+        SELECT transaction_date, merchant_name, amount, card_name
+        FROM silver.transactions
+    """, engine)
+
+    df['transaction_date'] = pd.to_datetime(df['transaction_date']).dt.date
+    existing['transaction_date'] = pd.to_datetime(existing['transaction_date']).dt.date
+
+    merge_key = ['transaction_date', 'merchant_name', 'amount', 'card_name']
+    existing['_exists'] = True
+    merged = df.merge(existing, on=merge_key, how='left')
+    new_rows = df[merged['_exists'].isna()].copy()
+
+    print(f"   Existing rows in DB: {len(existing)}")
+    print(f"   Rows in Parquet: {len(df)}")
+    print(f"   New rows to insert: {len(new_rows)}")
+
+    if len(new_rows) == 0:
+        print("   Nothing new to load.")
+    else:
+        print(f"\n7. Loading {len(new_rows)} new rows to PostgreSQL...")
 
     start_time = datetime.now()
 
     try:
-        df.to_sql(
-            name='transactions',
-            schema='silver',
-            con=engine,
-            if_exists='append',
-            index=False,
-            method='multi',
-            chunksize=100
-        )
+        if len(new_rows) > 0:
+            new_rows.to_sql(
+                name='transactions',
+                schema='silver',
+                con=engine,
+                if_exists='append',
+                index=False,
+                method='multi',
+                chunksize=100
+            )
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
 
-        print(f"   Loaded {len(df)} rows in {duration:.2f} seconds")
+        print(f"   Inserted {len(new_rows)} rows in {duration:.2f} seconds")
 
     except Exception as e:
         print(f"   ERROR during load: {str(e)}")
@@ -139,9 +159,7 @@ def load_to_postgres():
     print("\n" + "=" * 60)
     print("LOAD COMPLETE!")
     print("=" * 60)
-    print(f"\nAccess PgAdmin at: http://localhost:5050")
-    print(f"  Email: admin@admin.com")
-    print(f"  Password: admin")
+    print(f"\nDashboard: https://drewbudget.duckdns.org")
 
 if __name__ == "__main__":
     load_to_postgres()
