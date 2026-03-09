@@ -117,7 +117,7 @@ streamlit run src/dashboard/app.py
 - Day of month
 
 **Model:** Logistic Regression (max_iter=1000)  
-**Training Data:** 330 manually labeled transactions  
+**Training Data:** 880 manually labeled transactions  
 **Accuracy:** 91%
 
 ## Gold Layer Analytics Views
