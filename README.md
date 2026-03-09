@@ -12,6 +12,7 @@ An automated personal finance tracking system that extracts credit card transact
 **Pipeline:**
 ```
 Gmail IMAP → Email Parser → ML Categorizer → Parquet Storage → Supabase PostgreSQL → Gold Views → Streamlit Dashboard
+```
 
 **Infrastructure:**
 - **Supabase** — hosted PostgreSQL database (cloud)
@@ -43,6 +44,7 @@ Gmail IMAP → Email Parser → ML Categorizer → Parquet Storage → Supabase 
 - **Oracle Cloud** - VM hosting (Always Free tier)
 
 ## Project Structure
+
 ```
 budget_tracker/
 ├── data/                    # gitignored
@@ -114,8 +116,8 @@ streamlit run src/dashboard/app.py
 - Card type (Chase, Discover, CapitalOne)
 - Day of month
 
-**Model:** Logistic Regression (max_iter=1000)
-**Training Data:** 330 manually labeled transactions
+**Model:** Logistic Regression (max_iter=1000)  
+**Training Data:** 330 manually labeled transactions  
 **Accuracy:** 91%
 
 ## Gold Layer Analytics Views
