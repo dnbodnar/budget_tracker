@@ -2,6 +2,14 @@
 
 An automated personal finance tracking system that extracts credit card transactions from Gmail, categorizes them using machine learning, and serves a live dashboard.
 
+## Screenshots
+
+| This Month (MTD) | Historical Deep Dive |
+|---|---|
+| ![This Month Dashboard](screenshots/this-month.png) | ![Monthly Trends](screenshots/monthly-trends.png) |
+
+![Monthly Breakdown by Category](screenshots/category-breakdown.png)
+
 ## Architecture
 
 **Medallion Data Lake Pattern:**
@@ -117,7 +125,7 @@ streamlit run src/dashboard/app.py
 - Day of month
 
 **Model:** Logistic Regression (max_iter=1000)  
-**Training Data:** 880 manually labeled transactions  
+**Training Data:** 330 manually labeled transactions  
 **Accuracy:** 91%
 
 ## Gold Layer Analytics Views
